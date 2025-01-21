@@ -132,10 +132,12 @@ There are multiple ways to get acf and pacf plots in R. The default package "sta
 
 ```{r acf}
 # Option 1: The function acf() and pacf() is from package "stats"
-HP1_acf=acf(ts_inflow_data[,2], lag = 120)
+HP1_acf=acf(ts_inflow_data[,1], lag = 60)
 # the up and down movements represent the seasonality
-HP1_pacf=
-
+HP1_pacf=pacf(ts_inflow_data[,1], lag = 60)
+par(mfrow=c(1,2))
+HP1_acf
+HP1_pacf
 #Option 2: Computing ACF and PACF with package "forecast"
 
 #The next line will output a plot since we have plot=TRUE and also store the acf values in the object
