@@ -127,7 +127,6 @@ for(i in 1:nhydro){
   # because I am not storing Acf() into any object, I don't need to specify plot=TRUE 
   Pacf(ts_inflow_data[,i],lag.max=40,main=paste("Inflows HP",i,sep=""))
 }
-
 ```
 
 
@@ -136,21 +135,42 @@ for(i in 1:nhydro){
 Let's identify and remove trend component. You start by fitting a linear model to $Y_t=\beta_0+\beta_1*t+\epsilon_t$. 
 
 ```{r}
+hydropower <- inflow_data %>% 
+  select(my_date,HP1)
+
+ts_hydropower <- ts(hydropower, start = c(1931,1), frequency = 12)
+
+nobs = nrow(hydropower)
+
 #Create vector t
+t <- c(1:nobs)
 
-
+#combine t and original into one data frame
+hydropower$t <- t
 
 #Fit a linear trend to TS of iHP
+linear_trend_model=lm(HP1~t, hydropower)
+summary(linear_trend_model)
 
-
+beta0 <- as.numeric(linear_trend_model$coefficients[1])
+beta1 <- as.numeric(linear_trend_model$coefficients[2])
 ```
 
 
 ```{r}
 #remove the trend from series
+linear_trend <- beta0 + beta1 * t
+ts_linear_trend <- ts(linear_trend, start=c(1931,1), frequency=12)
+detrend_inflow <- hydropower$HP1 - linear_trend
+ts_detrend <- ts(detrend_inflow, start=c(1931,1),frequency=12)
 
-
-
+#visualize the trend on observed data
+autoplot(ts_detrend, color="darkgreen") +
+autolayer(ts_hydropower) +
+autolayer(ts_linear_trend) +
+ylab("HP1") +
+xlab("") +
+labs(color="")
 ```
 
 Note that blue line is our original series, red line is our trend, green line is our original series minus the trend or in other words the detrended series. And in orange is the trend line for the detrended series which has slope 0 meaning we were able to effectively eliminate the trend with a linear model.

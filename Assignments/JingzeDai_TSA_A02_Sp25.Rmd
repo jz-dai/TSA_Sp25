@@ -22,7 +22,10 @@ R packages needed for this assignment:"forecast","tseries", and "dplyr". Install
 
 ```{r}
 #Load/install required package here
-
+library(forecast)
+library(tseries)
+library(dplyr)
+library(openxlsx)
 ```
 
 
@@ -31,8 +34,17 @@ R packages needed for this assignment:"forecast","tseries", and "dplyr". Install
 Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx" on our **Data** folder. The data comes from the US Energy Information and Administration and corresponds to the December 2023 Monthly Energy Review. The spreadsheet is ready to be used. You will also find a $.csv$ version of the data "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv". You may use the function $read.table()$ to import the $.csv$ data in R. Or refer to the file "M2_ImportingData_CSV_XLSX.Rmd" in our Lessons folder for functions that are better suited for importing the $.xlsx$.
 
 ```{r}
-#Importing data set
+energy_data <- read.xlsx(
+  xlsxFile="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+  sheet = "Monthly Data", startRow = 13, colNames = FALSE)
 
+read_col_names  <- read.xlsx(
+  xlsxFile="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+  sheet = "Monthly Data", rows = 11, colNames = FALSE)
+
+colnames(energy_data) <- read_col_names
+energy_data$Data <- convertToDate(energy_data$Month)
+head(energy_data)
 ```
 
 
@@ -40,7 +52,13 @@ Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Produ
 You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.
 
 ```{r}
+# selecting the columns of interest
+power_data <- energy_data %>% 
+  select("Total Biomass Energy Production",
+         "Total Renewable Energy Production", 
+         "Hydroelectric Power Consumption")
 
+head(power_data)
 ```
 
 
@@ -48,7 +66,7 @@ You will work only with the following columns: Total Biomass Energy Production, 
 Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().
 
 ```{r}
-
+ts_power_data <- ts(power_data, start=c(1973,1), frequency=12)
 ```
 
 
@@ -56,15 +74,38 @@ Transform your data frame in a time series object and specify the starting point
 Compute mean and standard deviation for these three series.
 
 ```{r}
-
+mean_ts <- sapply(ts_power_data, mean)
+sd_ts <- sapply(ts_power_data, sd)
+print("Mean for the three series")
+mean_ts
+print("Standard deviation for the three series")
+sd_ts
 ```
 
 
 ## Question 4
 Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.
 
-```{r}
+```{r fig.height=10, fig.width=6}
 
+par(mfrow = c(3,1))
+plot(ts_power_data[,1],
+     type="l",col="blue",
+     ylab="Total Biomass Energy Production (Trillion Btu)",
+     main="Time Series for Biomass Energy Production") 
+abline(h=mean(ts_power_data[,1]),col="red")
+
+plot(ts_power_data[,2],
+     type="l",col="green",
+     ylab="Total Renewable Energy Production (Trillion Btu)",
+     main="Time Series for Renewable Energy Production") 
+abline(h=mean(ts_power_data[,2]),col="red")
+
+plot(ts_power_data[,3],
+     type="l",col="purple",
+     ylab="Hydroelectric Power Consumption (Trillion Btu)",
+     main="Time Series for Hydroelectric Power Consumption") 
+abline(h=mean(ts_power_data[,3]),col="red")
 ```
 
 
@@ -72,23 +113,48 @@ Display and interpret the time series plot for each of these variables. Try to m
 Compute the correlation between these three series. Are they significantly correlated? Explain your answer.
 
 ```{r}
-
+cor(ts_power_data)
 ```
 
+Only total biomass energy and renewable energy productions are positively correlated, as their correlation coefficient is 0.968, close to 1. Hydroelectric power consumption is not correlated to any of the other two variables since the correlation coefficients are close to 0, at -0.114 and -0.029 respectively.
 
 ## Question 6
 Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?
 
-```{r}
+```{r fig.height=8, fig.width=5}
 
+par(mfrow = c(3,1))
+biomass_acf<-acf(ts_power_data[,1],lag.max=40, 
+                main = "ACF for Total Biomass Energy Production",
+                type="correlation", plot=TRUE,
+                xlab="Lag (years)")
+renewable_acf<-acf(ts_power_data[,2],lag.max=40, 
+                  main = "ACF for Total Renewable Energy Production",
+                  type="correlation", plot=TRUE,
+                  xlab="Lag (years)")
+hydro_acf<-acf(ts_power_data[,3],lag.max=40, 
+              main = "ACF: Total Hydroelectric Consumption",
+              type="correlation", plot=TRUE,
+              xlab="Lag (years)")
 ```
+For both the biomass and renewable energy consumption, the ACF values decrease gradually as lags increase, indicating a strong trend. However, it does not have the sinusoidal pattern, suggesting that no significant seasonality is present.
 
+For the hydroelectric consumption, the ACF plot shows a sinusoidal pattern with a periodicity of 12 lags, indicating a seasonal behavior. However, the positive sinusoidal wave has stronger autocorrelation than the negative side.
 
 ## Question 7
 Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?
 
-```{r}
-
+```{r fig.height=8, fig.width=5}
+par(mfrow = c(3,1))
+biomass_pacf<-pacf(ts_power_data[,1],lag.max=40, 
+                main = "PACF for Total Biomass Energy Production",
+                plot=TRUE,xlab="Lag (years)")
+renewable_pacf<-pacf(ts_power_data[,2],lag.max=40, 
+                  main = "PACF for Total Renewable Energy Production",
+                  plot=TRUE,xlab="Lag (years)")
+hydro_pacf<-pacf(ts_power_data[,3],lag.max=40, 
+              main = "PACF: Total Hydroelectric Consumption",
+              plot=TRUE,xlab="Lag (years)")
 ```
 
-
+All PACF plots shows seasonality. For total hydroelectric consumption, the seasonality is expected as the shape of the PACF plot is similar to its ACF plot. However, for the other two time series, after removing the effects of other lags, there is significant ACF values at the lag value of 12 months (or 1 year), which is different from the ACF plot.
