@@ -160,3 +160,5 @@ hydro_pacf<-pacf(ts_power_data[,3],lag.max=40,
 ```
 
 All PACF plots shows seasonality. For total hydroelectric consumption, the seasonality is expected as the shape of the PACF plot is similar to its ACF plot. However, for the other two time series, after removing the effects of other lags, there is significant ACF values at the lag value of 12 months (or 1 year), which is different from the ACF plot.
+
+*Also there is dependence on lag 1 for the first two time series because after removing the effect of the first lag the PACF of other lags decreased.*
