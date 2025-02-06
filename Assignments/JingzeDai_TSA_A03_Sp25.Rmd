@@ -267,7 +267,7 @@ autoplot(ts_power_data[,1], color="purple")+
   autolayer(ts_deseason_renewable,color="orange")+
   ggtitle(
     "Original and De-seasoned Time Series for Renewables",
-    subtitle = "Original in purple, De-trended in orange") +
+    subtitle = "Original in purple, De-seasoned in orange") +
   ylab("Total Renewable Energy Production (Trillion Btu)") + xlab("Year") 
 
 # Hydro
@@ -289,7 +289,7 @@ autoplot(ts_power_data[,2], color="purple")+
   autolayer(ts_deseason_hydro,color="orange")+
   ggtitle(
     "Original and De-seasoned Time Series for Hydroelectric",
-    subtitle = "Original in purple, De-trended in orange") +
+    subtitle = "Original in purple, De-seasoned in orange") +
   ylab("Total Hydroelectric Energy Consumption (Trillion Btu)") + xlab("Year") 
 ```
 
