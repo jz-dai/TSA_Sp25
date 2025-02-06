@@ -167,8 +167,8 @@ autoplot(ts_power_data[,2],color="purple")+
   ylab("Total Hydroelectric Energy Consumption (Trillion Btu)") + xlab("Year") 
 ```
 
-Ans: For the renewable plot, the de-trended time series changed from the original one, as the increasing trend disappeared.
-For the hydroelectric plot, the two time series look largely the same.
+Ans: For the renewable plot, the de-trended time series changed from the original one, as the increasing trend disappeared. However, there is still some obvious trends left, for example downward trend from 1985 to 2000 and the upward trend after 2000.
+For the hydroelectric plot, the two time series look largely the same except for the reduced magnitude caused by reducing the trend equation.
 
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?
@@ -293,7 +293,7 @@ autoplot(ts_power_data[,2], color="purple")+
   ylab("Total Hydroelectric Energy Consumption (Trillion Btu)") + xlab("Year") 
 ```
 
-Ans: For renewable energy production, there is a slight change in decrease in the fluctuations, especially between 2000 and 2010, but generally the pattern stays the same. However, for hydroelectric consumption, the seasonal fluctuations decreased significantly, as there are less ups and downs.
+Ans: For renewable energy production, there is a slight change in decrease in the fluctuations, especially between 2000 and 2010, but generally the pattern stays the same. However, for hydroelectric consumption, the seasonal fluctuations decreased significantly, as there are less ups and downs. *These are likely induced by cycles or trends since they are not evenly spaced out.*
 
 ### Q9
 Plot ACF and PACF for the deseason series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?
@@ -341,4 +341,4 @@ hydro_deseasoned_pacf<-pacf(ts_deseason_hydro,lag.max=40,
 
 Ans: The ACF plot for renewable energy production does not change significantly, while the ACF plot for hydroelectric consumption changed drastically, since the season fluctuations are being replaced by a decreasing exponential pattern. This suggests that the time series for renewables does not have a strong seasonal component, while that for hydroelectric does.
 
-The PACF plots for both time series changed, in terms of the decrease in significant PACF values. In the deseasoned PACF plots for both time series, there are only two significant PACF values, while in the original, there are always multiple ones. This suggests that the seasonal components for both have successfully been eliminated.
+The PACF plots for both time series changed, in terms of the decrease in significant PACF values. In the deseasoned PACF plots for both time series, there are only two significant PACF values, while in the original, there are always multiple ones. This suggests that the seasonal components for both have successfully been eliminated. 
