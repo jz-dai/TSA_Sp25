@@ -73,9 +73,10 @@ power_data_diff <- diff(ts_power_data, lag = 1, differences = 1)
 plot(power_data_diff,
      type="l",col="blue",
      ylab="Differenced Energy Production (Trillion Btu)",
-     main="Differenced Time Series for Renewable Energy Production") 
+     main="Differenced Time Series for Renewable Energy Production")
 ```
 
+> Answer: No, the upward
 
 ### Q2
 Copy and paste part of your code for A3 where you run the regression for Total Renewable Energy Production and subtract that from the original series. This should be the code for Q3 and Q4. make sure you use the same name for you time series object that you had in A3, otherwise the code will not work.
@@ -151,7 +152,9 @@ Aggregate the original "Total Renewable Energy Production" series by year. You c
 ```{r}
 # grouping data in yearly steps instances
 power_data_matrix <- matrix(ts_power_data,byrow=FALSE,nrow=12)
-power_data_yearly <- colMeans(power_data_matrix)
+power_data_matrix[c(10:12), 52] <- NA
+power_data_yearly <- colMeans(power_data_matrix, na.rm = TRUE)
+
 ts_power_yearly <- ts(power_data_yearly, start=c(1973,1), frequency=1)
 
 # plotting yearly series
@@ -167,10 +170,19 @@ Apply the Mann Kendall, Spearman correlation rank test and ADF. Are the results 
 ```{r}
 print("Results from Mann-Kendall Test")
 summary(MannKendall(ts_power_yearly))
+```
 
+> Answer: 
+
+
+```{r}
 print("Results from Spearman Correlation")
 print(cor.test(ts_power_yearly,c(1973:2024),method="spearman"))
+```
 
+> Answer: 
+
+```{r}
 print("Results for ADF test")
 print(adf.test(ts_power_yearly,alternative = "stationary"))
 ```
