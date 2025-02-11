@@ -36,11 +36,11 @@ Consider the same data you used for A3 from the spreadsheet "Table_10.1_Renewabl
 ```{r message=FALSE, warning=FALSE}
 #Importing data set - you may copy your code from A3
 energy_data <- read.xlsx(
-  xlsxFile="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+  xlsxFile="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
   sheet = "Monthly Data", startRow = 13, colNames = FALSE)
 
 read_col_names  <- read.xlsx(
-  xlsxFile="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+  xlsxFile="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
   sheet = "Monthly Data", rows = 11, colNames = FALSE)
 
 colnames(energy_data) <- read_col_names
@@ -76,7 +76,7 @@ plot(power_data_diff,
      main="Differenced Time Series for Renewable Energy Production")
 ```
 
-> Answer: No, the upward
+> Answer: No, the series do not seem to have a trend after differencing it. The original upward trend disappeared.
 
 ### Q2
 Copy and paste part of your code for A3 where you run the regression for Total Renewable Energy Production and subtract that from the original series. This should be the code for Q3 and Q4. make sure you use the same name for you time series object that you had in A3, otherwise the code will not work.
@@ -112,7 +112,8 @@ autoplot(ts_power_data, series = "Original") +
   ggtitle("Time Series for Total Renewable Energy Production")
 ```
 
-> Answer: 
+> Answer: The de-trended time series still shows a certain trend, more specifically, there is a downward trend from 1985 to 2000 and an upward trend from 2000 to 2024. However, the differenced time series is mainly flat and shows no apparent trend. Thus, the differencing method seems to be more efficient in removing trend in this case.
+
 
 ### Q4
 Plot the ACF for the three series and compare the plots. Add the argument `ylim=c(-0.5,1)` to the autoplot() or Acf() function - whichever you are using to generate the plots - to make sure all three y axis have the same limits. Looking at the ACF which method do you think was more efficient in eliminating the trend? The linear regression or differencing?
@@ -131,7 +132,7 @@ acf_title <- ggdraw() + draw_label(
 plot_grid(acf_title, plot_row, nrow=2, ncol=1, rel_heights=c(0.1,1))
 ```
 
-> Answer: 
+> Answer: Differencing is more efficient in removing the trend for this time series, because from the ACF plots, the de-trended series only removed a small magnitude of the autocorrelation while the differencing method completely removes the autocorrelation in between those seasonality-induced significant ACF values.
 
 ### Q5
 Compute the Seasonal Mann-Kendall and ADF Test for the original "Total Renewable Energy Production" series. Ask R to print the results. Interpret the results for both test. What is the conclusion from the Seasonal Mann Kendall test? What's the conclusion for the ADF test? Do they match what you observed in Q3 plot? Recall that having a unit root means the series has a stochastic trend. And when a series has stochastic trend we need to use differencing to remove the trend.
@@ -144,7 +145,8 @@ print("Results for ADF test")
 print(adf.test(ts_power_data,alternative = "stationary"))
 ```
 
-> Answer: 
+> Answer: The p-value for the seasonal Mann-Kendall test is less than 0.05, indicating a significant deterministic trend. Moreover, the score for the test is 12468, indicating a significant increasing trend. The p-value for the Augmented Dickey-Fuller test is 0.9242, significantly rejecting the alternative hypothesis that the time series is stationary, which means that there is stochastic trend. Moreover, the absolute value of the test score is 1.0898, close to 1, indicating the presence of a unit root, confirming the stochastic trend. The results do match with the plots in previous questions and differencing indeed removed the stochastic trend.
+
 
 ### Q6
 Aggregate the original "Total Renewable Energy Production" series by year. You can use the same procedure we used in class. Store series in a matrix where rows represent months and columns represent years. And then take the columns mean using function colMeans(). Recall the goal is the remove the seasonal variation from the series to check for trend. Convert the accumulates yearly series into a time series object and plot the series using autoplot().
@@ -158,8 +160,8 @@ power_data_yearly <- colMeans(power_data_matrix, na.rm = TRUE)
 ts_power_yearly <- ts(power_data_yearly, start=c(1973,1), frequency=1)
 
 # plotting yearly series
-autoplot(ts_power_yearly, linewidth = 1, series = "Yearly") +
-  autolayer(ts_power_data, alpha = 0.5, series = "Monthly") +
+autoplot(ts_power_data, alpha = 0.5, series = "Monthly") +
+  autolayer(ts_power_yearly, linewidth = 1, series = "Yearly") +
   ylab("Energy Production (Trillion Btu)") +
   ggtitle("Time Series for Total Renewable Energy Production")
 ```
@@ -172,7 +174,7 @@ print("Results from Mann-Kendall Test")
 summary(MannKendall(ts_power_yearly))
 ```
 
-> Answer: 
+> Answer: The p-value is less than 0.05, indicating a significant trend. The Mann-Kendall test score is 1084, a positive number, indicating a strong increasing deterministic trend. They agree with the test results for the monthly series, although the test score value decreased significantly.
 
 
 ```{r}
@@ -180,11 +182,11 @@ print("Results from Spearman Correlation")
 print(cor.test(ts_power_yearly,c(1973:2024),method="spearman"))
 ```
 
-> Answer: 
+> Answer: The Spearman correlation test showed a significant p-value (less than 0.05) as well, with a rho value of 0.9209, which is close to 1, indicating that the time series for the yearly data shows a positive trend, but not necessarily linear. Although we did not perform Spearman correlation test for the previous monthly data, this result matches with the Mann-Kendall test in terms of suggesting a positive trend for both time series.
 
 ```{r}
 print("Results for ADF test")
 print(adf.test(ts_power_yearly,alternative = "stationary"))
 ```
 
-> Answer: 
+> Answer: The p-value is 0.9399, more than 0.05, meaning that the alternative hypothesis that the time series is stationary (without stochastic trend) is rejected. The test score is -0.93521, with a absolute value close to 1, indicating a unit root and the presence of stochastic trend. This again matches with the monthly data.
