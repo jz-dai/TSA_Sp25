@@ -109,7 +109,11 @@ autoplot(ts_power_data, series = "Original") +
   autolayer(ts_detrend_renewable, series = "De-trended")+
   autolayer(power_data_diff, series = "Differenced") +
   ylab("Energy Production (Trillion Btu)") +
-  ggtitle("Time Series for Total Renewable Energy Production")
+  ggtitle("Time Series for Total Renewable Energy Production") +
+  scale_colour_manual(
+    values=c("De-trended" = "blue", "Differenced"="red", "Original" = "pink")
+  )
+
 ```
 
 > Answer: The de-trended time series still shows a certain trend, more specifically, there is a downward trend from 1985 to 2000 and an upward trend from 2000 to 2024. However, the differenced time series is mainly flat and shows no apparent trend. Thus, the differencing method seems to be more efficient in removing trend in this case.
