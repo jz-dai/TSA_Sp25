@@ -5,7 +5,7 @@ author: "Jingze Dai"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Directions
@@ -22,14 +22,13 @@ R packages needed for this assignment: "readxl", "ggplot2", "forecast","tseries"
 
 ```{r}
 #Load/install required package here
+library(openxlsx)
 library(forecast)
 library(tseries)
 library(ggplot2)
 library(Kendall)
 library(lubridate)
 library(tidyverse)  #load this package so yon clean the data frame using pipes
-
-
 ```
 
 ## Decomposing Time Series
@@ -38,17 +37,20 @@ Consider the same data you used for A04 from the spreadsheet "Table_10.1_Renewab
 
 ```{r}
 #Importing data set - using xlsx package
-energy_data <- read.xlsx(file="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",header=FALSE,startRow = 13,sheetIndex=1) #startRow is equivalent to skip on read.table
+energy_data <- read.xlsx(
+  xlsxFile="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+  colNames=FALSE,startRow = 13,sheet = "Monthly Data") 
 
 #Now let's extract the column names from row 11 only
-read_col_names <- read.xlsx(file="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",header=FALSE,startRow = 11,endRow=11,sheetIndex=1)
+read_col_names <- read.xlsx(
+  xlsxFile="../Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+  colNames =FALSE, rows = 11,sheet = "Monthly Data")
 
 colnames(energy_data) <- read_col_names
 head(energy_data)
 
 nobs=nrow(energy_data)
 nvar=ncol(energy_data)
-
 ```
 
 ### Q1
@@ -56,8 +58,31 @@ nvar=ncol(energy_data)
 For this assignment you will work only with the following columns: Solar Energy Consumption and Wind Energy Consumption. Create a data frame structure with these two time series only and the Date column. Drop the rows with *Not Available* and convert the columns to numeric. You can use filtering to eliminate the initial rows or convert to numeric and then use the drop_na() function. If you are familiar with pipes for data wrangling, try using it!
 
 ```{r}
+# converting into date format
+energy_data$Date <- convertToDate(energy_data$Month)
 
+# filtering out NA data and selecting columns of interest
+renewables_data <- energy_data %>% 
+  filter(`Solar Energy Consumption` != "Not Available") %>% 
+  filter(`Wind Energy Consumption` != "Not Available") %>%
+  select(Date,`Solar Energy Consumption`,`Wind Energy Consumption`) 
 
+# converting to numeric format
+renewables_data <- renewables_data %>% 
+  rename(Solar = `Solar Energy Consumption`, 
+         Wind = `Wind Energy Consumption`) %>% 
+  mutate(Solar = as.numeric(Solar),
+         Wind = as.numeric(Wind))
+
+# creating time series
+solar_ts <- ts(renewables_data[,2], start = c(1984,1), frequency = 12)
+wind_ts <- ts(renewables_data[,3], start = c(1984,1), frequency = 12)
+
+# creating the dataframe
+renewables_df <- data.frame(solar_ts, wind_ts, renewables_data$Date)
+colnames(renewables_df) <- c("Solar_TS","Wind_TS", "Date")
+
+head(renewables_df)
 ```
 
 ### Q2
@@ -65,7 +90,19 @@ For this assignment you will work only with the following columns: Solar Energy 
 Plot the Solar and Wind energy consumption over time using ggplot. Plot each series on a separate graph. No need to add legend. Add informative names to the y axis using `ylab()`. Explore the function `scale_x_date()` on ggplot and see if you can change the x axis to improve your plot. Hint: use `scale_x_date(date_breaks = "5 years", date_labels = "%Y")")`
 
 ```{r}
+# solar energy consumption
+ggplot(data = renewables_df, aes(x=Date, y=Solar_TS)) + 
+  geom_line(color = "red") +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
+  ggtitle("Time Series for Solar Energy Consumption") +
+  ylab("Consumption (Trillion Btu)")
 
+# wind energy consumption
+ggplot(data = renewables_df, aes(x=Date, y=Wind_TS)) + 
+  geom_line(color = "blue") +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
+  ggtitle("Time Series for Wind Energy Consumption") +
+  ylab("Consumption (Trillion Btu)")
 ```
 
 ### Q3
@@ -73,9 +110,13 @@ Plot the Solar and Wind energy consumption over time using ggplot. Plot each ser
 Now plot both series in the same graph, also using ggplot(). Use function `scale_color_manual()` to manually add a legend to ggplot. Make the solar energy consumption red and wind energy consumption blue. Add informative name to the y axis using `ylab("Energy Consumption)`. And use function `scale_x_date()` to set x axis breaks every 5 years.
 
 ```{r}
-
-
-
+ggplot(data = renewables_df, aes(x=Date)) + 
+  geom_line(aes(y=Wind_TS,col="Wind Energy")) +
+  geom_line(aes(y=Solar_TS,col="Solar Energy")) +
+  scale_color_manual(values = c("Wind Energy"="blue","Solar Energy"="red")) +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
+  ggtitle("Time Series for Solar and Wind Energy Consumption") +
+  ylab("Consumption (Trillion Btu)")
 ```
 
 
@@ -95,8 +136,19 @@ Additional info on `decompose()`.
 Transform wind and solar series into a time series object and apply the decompose function on them using the additive option, i.e., `decompose(ts_data, type = "additive")`. What can you say about the trend component? What about the random component? Does the random component look random? Or does it appear to still have some seasonality on it?
 
 ```{r}
+# already transformed to a TS object in previous question
+# decomposing both TS objects
+solar_decomposed_add <- decompose(solar_ts, type = "additive")
+plot(solar_decomposed_add) + title(main = "For Solar TS", line = 1)
 
+wind_decomposed_add <- decompose(wind_ts, type = "additive")
+plot(wind_decomposed_add) + title(main = "For Wind TS", line = 1)
 ```
+> Answer:For solar energy consumption time series, the decomposed trend seems like a smooth exponential curve, while the random has a clear oscillation pattern that has constant amplitude from 1984 to 2010, and the amplitude decreased and increased drastically towards 2024. 
+
+For wind energy consumption time series, the decomposed trend is less smooth but still shows an exponential shape, with the random having a up and down oscillation that increases the amplitude from 2011 to 2024, similar to the solar time series observed above.
+
+These observations indicate that the random component for both time series still have seasonality and that the seasonality changes with the amplitude of the trend.
 
 
 ### Q5
@@ -104,21 +156,28 @@ Transform wind and solar series into a time series object and apply the decompos
 Use the decompose function again but now change the type of the seasonal component from additive to multiplicative. What happened to the random component this time?
 
 ```{r}
+solar_decomposed_mul <- decompose(solar_ts, type = "multiplicative")
+plot(solar_decomposed_mul) + title(main = "For Solar TS", line = 1)
 
+wind_decomposed_mul <- decompose(wind_ts, type = "multiplicative")
+plot(wind_decomposed_mul) + title(main = "For Wind TS", line = 1)
 ```
+> Answer:The random component for both time series looks more random (i.e. less seasonality pattern) with the multiplicative model. However, the solar time series' random component still shows subtle seasonality from 1990 to 2009. The wind time series' one appears to be more random. 
+
+These observations suggest that the multiplicative model works better than the additive model in removing the trend from the original time series and to decompose them further to seasonality and random parts.
+
 
 ### Q6
 
 When fitting a model to this data, do you think you need all the historical data? Think about the data from 90s and early 20s. Are there any information from those years we might need to forecast the next six months of Solar and/or Wind consumption. Explain your response.
 
-> Answer:
+> Answer: The short answer is no, not all historical data is needed. This is because at the early part of the time series (90s) the magnitude is too small as compared to later time periods (2020s) 
+
 
 ### Q7
-
 Create a new time series object where historical data starts on January 2012. Hint: use `filter()` function so that you don't need to point to row numbers, .i.e, `filter(xxxx, year(Date) >= 2012 )`. Apply the decompose function `type=additive` to this new time series. Comment the results. Does the random component look random? Think about our discussion in class about seasonal components that depends on the level of the series. 
 
 ```{r}
-
 ```
 
 > Answer:
@@ -126,15 +185,12 @@ Create a new time series object where historical data starts on January 2012. Hi
 ## Identify and Remove outliers
 
 ### Q8
-
 Apply the `tsclean()` to both series from Q7. Did the function removed any outliers from the series? Hint: Use `autoplot()` to check if there is difference between cleaned series and original series.
 
 ```{r}
-
 ```
 
 ### Q9
-
 Redo number Q8 but now with the time series you created on Q7, i.e., the series starting in 2014. Using what `autoplot()` again what happened now?Did the function removed any outliers from the series?
 
 ```{r}
