@@ -171,30 +171,72 @@ These observations suggest that the multiplicative model works better than the a
 
 When fitting a model to this data, do you think you need all the historical data? Think about the data from 90s and early 20s. Are there any information from those years we might need to forecast the next six months of Solar and/or Wind consumption. Explain your response.
 
-> Answer: The short answer is no, not all historical data is needed. This is because at the early part of the time series (90s) the magnitude is too small as compared to later time periods (2020s) 
+> Answer: The short answer is no, not all historical data is needed. This is because at the early part of the time series (80s and 90s) the magnitude is too small as compared to later time periods (2020s), and the overall trend will not change of the earlier data is truncated. Meanwhile, data from the early 20s is important to predict the next six months of solar and wind consumption, since they are temporally close to the future. Therefore, it is not necessary to have all historical data before fitting into a time series model. To preditct the energy consumption for the next six months, finding the recent trend with recent data (in early 20s) is more important.
 
 
 ### Q7
 Create a new time series object where historical data starts on January 2012. Hint: use `filter()` function so that you don't need to point to row numbers, .i.e, `filter(xxxx, year(Date) >= 2012 )`. Apply the decompose function `type=additive` to this new time series. Comment the results. Does the random component look random? Think about our discussion in class about seasonal components that depends on the level of the series. 
 
 ```{r}
+# filtering date
+renewables_present <- filter(renewables_data, year(Date) >= 2012)
+solar_present_ts <- ts(
+  renewables_present$Solar, start = c(2012,1), frequency = 12)
+wind_present_ts <- ts(
+  renewables_present$Wind, start = c(2012,1), frequency = 12)
+
+# decomposing time series
+solar_present_decomposed <- decompose(solar_present_ts, type = "additive")
+plot(solar_present_decomposed) + title(main = "For Solar TS", line = 1)
+
+wind_present_decomposed <- decompose(wind_present_ts, type = "additive")
+plot(wind_present_decomposed) + title(main = "For Wind TS", line = 1)
 ```
 
-> Answer:
+> Answer: For solar series, the random component does not look random, especially from 2012 to 2016, and from 2021 to 2024. The trend and seasonal components remain similar to the full dataset. For wind series, the random component looks random but still demonstrates a little bit of seasonality, while its trend looking like a linear one instead of an exponential one. The reason why the random components for both series still shows seasonality is because the time series is not a linear model, it is a product of the trend and the seasonality. Therefore, the seasonality changes with levels of the trend. In the decomposition process, additive model was selected, thus the unpresented change in seasonality is left in the random component, leading to their seasonality patterns.
 
 ## Identify and Remove outliers
 
 ### Q8
-Apply the `tsclean()` to both series from Q7. Did the function removed any outliers from the series? Hint: Use `autoplot()` to check if there is difference between cleaned series and original series.
+Apply the tsclean() to both time series object you created on Q4. Did the function removed any outliers from the series? Hint: Use autoplot() to check if there is difference between cleaned series and original series.
 
 ```{r}
+solar_cleaned <- tsclean(solar_ts)
+wind_cleaned <- tsclean(wind_ts)
+
+# plot for solar
+autoplot(solar_ts, series = "Original full data") +
+  autolayer(solar_cleaned, series = "Cleaned full data")+
+  ylab("Energy Consumption (Trillion Btu)") +
+  ggtitle("Time Series for Solar Energy Consumption")
+
+# plot for wind
+autoplot(wind_ts, series = "Original full data") +
+  autolayer(wind_cleaned, series = "Cleaned full data")+
+  ylab("Energy Consumption (Trillion Btu)") +
+  ggtitle("Time Series for Wind Energy Consumption")
 ```
+
+> Answer: It seems like the tsclean function treated the large oscillations after the year 2015 as outliers and removed them for a smoother series. 
 
 ### Q9
-Redo number Q8 but now with the time series you created on Q7, i.e., the series starting in 2014. Using what `autoplot()` again what happened now?Did the function removed any outliers from the series?
+Redo number Q8 but now with the time series you created on Q7, i.e., the series starting in 2012. Using what autoplot() again what happened now? Did the function removed any outliers from the series?
 
 ```{r}
+solar_present_cleaned <- tsclean(solar_present_ts)
+wind_present_cleaned <- tsclean(wind_present_ts)
 
+# plot for solar
+autoplot(solar_present_ts, series = "Present data (2012-2024)") +
+  autolayer(solar_present_cleaned, series = "Cleaned present data")+
+  ylab("Energy Consumption (Trillion Btu)") +
+  ggtitle("Time Series for Solar Energy Consumption from 2012-2024")
+
+# plot for wind
+autoplot(wind_present_ts, series = "Present data (2012-2024)") +
+  autolayer(wind_present_cleaned, series = "Cleaned present data")+
+  ylab("Energy Consumption (Trillion Btu)") +
+  ggtitle("Time Series for Wind Energy Consumption from 2012-2024")
 ```
 
-> Answer:
+> Answer:The tsclean function only removed or changed a very limited amount of data. This indicates that by using recent data it is easier to model recent trends and can achieve a better result.
