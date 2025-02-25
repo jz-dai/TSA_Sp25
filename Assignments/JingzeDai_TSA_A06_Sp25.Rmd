@@ -18,10 +18,13 @@ When you have completed the assignment, **Knit** the text and code into a single
 
 R packages needed for this assignment: "ggplot2", "forecast", "tseries" and "sarima". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 #Load/install required package here
-
-
+list_of_lib <- c(
+  "forecast","tseries","dplyr","sarima","ggplot2", "cowplot")
+for (i in list_of_lib){
+  library(i,  character.only = TRUE)
+}
 ```
 
 This assignment has general questions about ARIMA Models.
@@ -32,11 +35,11 @@ Describe the important characteristics of the sample autocorrelation function (A
 
 * AR(2)
 
-> Answer:
+> Answer: Autoregressive models have exponentially decaying ACF plots over time, while the PACF plot shows the order of the model. In this case, the AR model has an order of 2, thus the cut off point (when the PACF value becomes not significant) will be located at lag = 2.
 
 * MA(1)
 
-> Answer:
+> Answer: Moving average models have exponentially decaying PACF plots over time, while the ACF plot shows the order of the model. In this case, the MA model has an order of 1, thus the cut off point (when the ACF value becomes not significant) will be located at lag = 1.
 
 ## Q2
 
@@ -45,20 +48,55 @@ Recall that the non-seasonal ARIMA is described by three parameters ARIMA$(p,d,q
 (a) Consider three models: ARMA(1,0), ARMA(0,1) and ARMA(1,1) with parameters $\phi=0.6$ and $\theta= 0.9$. The $\phi$ refers to the AR coefficient and the $\theta$ refers to the MA coefficient. Use the `arima.sim()` function in R to generate $n=100$ observations from each of these three models. Then, using `autoplot()` plot the generated series in three separate graphs.
 
 ```{r}
+# setting seed for reproducibility
+set.seed(101)
 
+# ARMA(1,0)
+model_1 <- arima.sim(list(order = c(1,0,0), ar = 0.6), n = 100)
+
+autoplot(model_1)+
+  ylab("Simulated value") +
+  ggtitle("Simulated Time Series for ARMA(1,0) Model; n=100")
+
+# ARMA(0,1)
+model_2 <- arima.sim(list(order = c(0,0,1), ma = 0.9), n = 100)
+
+autoplot(model_2)+
+  ylab("Simulated value") +
+  ggtitle("Simulated Time Series for ARMA(0,1) Model; n=100")
+
+
+# ARMA(1,1)
+model_3 <- arima.sim(list(order = c(1,0,1), ar = 0.6, ma = 0.9), n = 100)
+
+autoplot(model_3)+
+  ylab("Simulated value") +
+  ggtitle("Simulated Time Series for ARMA(1,1) Model; n=100")
+ 
 ```
 
 (b) Plot the sample ACF for each of these models in one window to facilitate comparison (Hint: use `cowplot::plot_grid()`).
 
-
-```{r}
-
+```{r warning=FALSE}
+plot_grid(autoplot(Acf(model_1,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(1,0)"),
+          autoplot(Acf(model_2,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(0,1)"),
+          autoplot(Acf(model_3,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(1,1)"),
+          nrow=1)
 ```
 
 (c) Plot the sample PACF for each of these models in one window to facilitate comparison.
 
-```{r}
-
+```{r warning=FALSE}
+plot_grid(autoplot(pacf(model_1,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(1,0)"),
+          autoplot(pacf(model_2,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(0,1)"),
+          autoplot(pacf(model_3,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(1,1)"),
+          nrow=1)
 ```
 
 (d) Look at the ACFs and PACFs. Imagine you had these plots for a data set and you were asked to identify the model, i.e., is it AR, MA or ARMA and the order of each component. Would you be able identify them correctly? Explain your answer.
@@ -71,8 +109,48 @@ Recall that the non-seasonal ARIMA is described by three parameters ARIMA$(p,d,q
 
 (f) Increase number of observations to $n=1000$ and repeat parts (b)-(e).
 
-```{r}
+```{r warning=FALSE}
+# setting seed for reproducibility
+set.seed(101)
 
+# ARMA(1,0)
+model_1b <- arima.sim(list(order = c(1,0,0), ar = 0.6), n = 1000)
+
+autoplot(model_1b)+
+  ylab("Simulated value") +
+  ggtitle("Simulated Time Series for ARMA(1,0) Model; n=1000")
+
+# ARMA(0,1)
+model_2b <- arima.sim(list(order = c(0,0,1), ma = 0.9), n = 1000)
+
+autoplot(model_2b)+
+  ylab("Simulated value") +
+  ggtitle("Simulated Time Series for ARMA(0,1) Model; n=1000")
+
+
+# ARMA(1,1)
+model_3b <- arima.sim(list(order = c(1,0,1), ar = 0.6, ma = 0.9), n = 1000)
+
+autoplot(model_3b)+
+  ylab("Simulated value") +
+  ggtitle("Simulated Time Series for ARMA(1,1) Model; n=1000")
+ 
+
+plot_grid(autoplot(Acf(model_1b,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(1,0)"),
+          autoplot(Acf(model_2b,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(0,1)"),
+          autoplot(Acf(model_3b,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(1,1)"),
+          nrow=1)
+
+plot_grid(autoplot(pacf(model_1b,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(1,0)"),
+          autoplot(pacf(model_2b,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(0,1)"),
+          autoplot(pacf(model_3b,lag=40,plot=FALSE),
+                   ylim=c(-0.5,1),main="ARMA(1,1)"),
+          nrow=1)
 ```
 
 ## Q3
@@ -81,7 +159,11 @@ Consider the ARIMA model $y_t=0.7*y_{t-1}-0.25*y_{t-12}+a_t-0.1*a_{t-1}$
 
 (a) Identify the model using the notation ARIMA$(p,d,q)(P,D,Q)_ s$, i.e., identify the integers $p,d,q,P,D,Q,s$ (if possible) from the equation.
 
+
+
 (b) Also from the equation what are the values of the parameters, i.e., model coefficients.
+
+
 
 ## Q4
 
