@@ -177,9 +177,12 @@ $MAPE = \sum|Actual - Forecast|/Actual/n*100$
 
 ```{r}
 observed <- electricity_price_processed[(nobs-n_for+1):nobs, "All.sectors"]
+
+# acf value not plotted because 12 months is not enough to calculate it
+
 #Model 1: Arithmetic mean
 MEAN_scores <- accuracy(MEAN_seas$mean,observed)  #store the performance metrics
-plot(MEAN_seas)  #plot forecasts
+plot(MEAN_seas)  #plot forecasts 
 
 #Model 2: Seasonal naive 
 SNAIVE_scores <- accuracy(SNAIVE_seas$mean,observed)
@@ -225,7 +228,18 @@ kbl(seas_scores,
 Create a code that plots all forecasted values and observed values together.
 
 ```{r}
+electric_ts <- ts(electricity_price_processed$All.sectors, start = c(2001,1), frequency = 12)
 
+autoplot(SARIMA_for) +
+  autolayer(electric_ts, series = "actual")
+
+
+autoplot(MEAN_seas) +
+  autolayer(electric_ts, series = "actual")
+
+
+autoplot(SNAIVE_seas) +
+  autolayer(electric_ts, series = "actual")
 
 ```
 
